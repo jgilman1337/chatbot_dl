@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/go-rod/rod/lib/devices"
 	"github.com/jgilman1337/chatbot_dl/pkg/service/perplexity"
 	rutil "github.com/jgilman1337/rod_util/pkg"
 )
@@ -32,6 +33,7 @@ func TestPerplexityBasic(t *testing.T) {
 	ctx := context.Background()
 	opts := perplexity.DefaultDLOpts()
 	opts.Timeout = 20
+	opts.Device = &devices.Nexus7
 	ctx = perplexity.WithOptions(ctx, &opts)
 
 	//Scrape the thread

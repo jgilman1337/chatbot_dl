@@ -33,10 +33,13 @@ func Scrape(b *rod.Browser, ctx context.Context, id string) (sres []c.Thread, se
 		}
 
 		//Spoof the user agent
-		dev := rutil.PickRandMobileDevice()
+		dev := opts.Device
+		if dev == nil {
+			rdev := rutil.PickRandMobileDevice()
+			dev = &rdev
+		}
 		logger.Info(fmt.Sprintf("Using fake device '%s'; user agent: '%s'", dev.Title, dev.UserAgent))
-		p.MustEmulate(dev)
-
+		p.MustEmulate(*dev)
 	})
 
 	//TODO: setup network monitoring stuff from old tests

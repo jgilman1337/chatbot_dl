@@ -1,6 +1,9 @@
 package perplexity
 
-import c "github.com/jgilman1337/chatbot_dl/pkg/service/common"
+import (
+	"github.com/go-rod/rod/lib/devices"
+	c "github.com/jgilman1337/chatbot_dl/pkg/service/common"
+)
 
 // Holds the options for a Perplexity thread archive operation.
 type DLOpts struct {
@@ -13,6 +16,8 @@ type DLOpts struct {
 	DLWaitMax uint //The minimum threshold for the page event runners (ms).
 
 	TNLen int //The maximum length of a downloaded thread name.
+
+	Device *devices.Device //The device to emulate when scraping. Leave as `nil` for a random selection.
 }
 
 // Returns the default options for a download options struct.
@@ -27,5 +32,7 @@ func DefaultDLOpts() DLOpts {
 		DLWaitMax: 2500,
 
 		TNLen: 30,
+
+		Device: nil,
 	}
 }
