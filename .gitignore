@@ -1,0 +1,5 @@
+*.txt
+!idea.txt
+!test/data/**/*.txt
+*.bak
+doc
