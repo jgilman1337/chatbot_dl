@@ -6,7 +6,6 @@ GO := go build
 GO_PROD := go build -ldflags="-s -w"
 
 
-
 all: cli discord
 all_prod: cli_prod discord_prod
 
@@ -29,4 +28,3 @@ discord:
 discord_prod:
 	@echo "Building Discord binary (production version)..."
 	$(GO_PROD) -o $(BIN_DIR)/discord_prod ./cmd/discord
-
