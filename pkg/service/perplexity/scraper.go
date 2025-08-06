@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
-	"github.com/go-rod/stealth"
 
 	rutil "github.com/jgilman1337/rod_util/pkg"
 
@@ -17,34 +16,34 @@ import (
 )
 
 // Implements the Scrape() function from ServiceWD.
-func (s PplxScraper) Scrape(b *rod.Browser, ctx context.Context, tid string) (sres []c.Thread, serr error) {
+func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, tid string) (sres []c.Thread, serr error) {
 	logger := c.LoggerFromCtx(ctx)
 	opts := OptsFromCtx(ctx)
 	result := make([]c.Thread, 0)
 
-	//Add stealth to try to bypass Cloudflare Turnstile
-	var p *rod.Page
-	err := rod.Try(func() {
-		p = stealth.MustPage(b)
-		if opts.Timeout > 0 {
-			p = p.Timeout(time.Duration(opts.Timeout) * time.Second)
+	//Create a page if it doesn't yet exist
+	createdPage := p == nil
+	if createdPage {
+		logger.Debug("Attempting to self-spawn a new page...")
+
+		np, err := c.CreateStealthPage(b, opts.Device, opts.Timeout, ctx)
+		if err != nil {
+			return nil, err
 		}
+		p = np
 
-		//Spoof the user agent
-		dev := opts.Device
-		if dev == nil {
-			rdev := rutil.PickRandMobileDevice()
-			dev = &rdev
-		}
-		logger.Info(fmt.Sprintf("Using fake device '%s'; user agent: '%s'", dev.Title, dev.UserAgent))
-		p.MustEmulate(*dev)
-	})
+		logger.Debug("Spawned a new stealth page successfully")
+	}
 
-	//TODO: setup network monitoring stuff from old tests
-
-	//Defer the page close operation for later
+	//Defer the page close operation for later, but only if the function created the page
 	caughtTimeoutErr := false
 	defer func() {
+		if !createdPage {
+			return
+		}
+
+		logger.Debug("Attempting to kill the self-spawned page...")
+
 		err := p.Close()
 		if res := c.HandleErr(logger,
 			c.NewErrHandlerParams(
@@ -57,20 +56,11 @@ func (s PplxScraper) Scrape(b *rod.Browser, ctx context.Context, tid string) (sr
 		); res != c.EH_OK {
 			return
 		}
+
+		logger.Debug("Successfully killed the self-spawned page")
 	}()
 
-	//Ensure the page was created successfully
-	if res := c.HandleErr(logger,
-		c.NewErrHandlerParams(
-			"Error during page creation; cannot continue",
-			"page creation",
-			err,
-			&caughtTimeoutErr,
-			&serr,
-		),
-	); res != c.EH_OK {
-		return
-	}
+	//TODO: setup network monitoring stuff from old tests
 
 	//Navigate to the target thread
 	if err := p.Navigate(s.BuildLink(tid)); err != nil {

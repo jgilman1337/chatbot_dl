@@ -21,7 +21,7 @@ type ServiceWD interface {
 	IsValidLink(l string) bool
 
 	//The scraper function to call.
-	Scrape(b *rod.Browser, ctx context.Context, tid string) (sres []c.Thread, serr error)
+	Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, tid string) (sres []c.Thread, serr error)
 
 	//Gets the base URL for the selected service.
 	Stem() string
