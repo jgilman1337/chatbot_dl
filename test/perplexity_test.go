@@ -36,7 +36,8 @@ func TestPerplexityBasic(t *testing.T) {
 	ctx = perplexity.WithOptions(ctx, &opts)
 
 	//Scrape the thread
-	result, err := perplexity.Scrape(browser, ctx, id)
+	pplx := perplexity.PplxScraper{}
+	result, err := pplx.Scrape(browser, ctx, id)
 	if err != nil {
 		if result != nil {
 			t.Log("Result is non-nil")

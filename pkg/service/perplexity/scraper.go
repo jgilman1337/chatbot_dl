@@ -16,10 +16,8 @@ import (
 	"github.com/jgilman1337/chatbot_dl/pkg/util"
 )
 
-var baseUrl = "https://www.perplexity.ai/search/"
-
-// Scrapes a Perplexity thread using Rod.
-func Scrape(b *rod.Browser, ctx context.Context, id string) (sres []c.Thread, serr error) {
+// Implements the Scrape() function from ServiceWD.
+func (s PplxScraper) Scrape(b *rod.Browser, ctx context.Context, tid string) (sres []c.Thread, serr error) {
 	logger := c.LoggerFromCtx(ctx)
 	opts := OptsFromCtx(ctx)
 	result := make([]c.Thread, 0)
@@ -75,7 +73,7 @@ func Scrape(b *rod.Browser, ctx context.Context, id string) (sres []c.Thread, se
 	}
 
 	//Navigate to the target thread
-	if err := p.Navigate(baseUrl + id); err != nil {
+	if err := p.Navigate(s.BuildLink(tid)); err != nil {
 		if res := c.HandleErr(logger,
 			c.NewErrHandlerParams(
 				"Error while navigating to the target",
