@@ -14,7 +14,7 @@ type ServiceWD interface {
 	//Builds a link from a thread ID.
 	BuildLink(tid string) string
 
-	//Returns the identity (name) for the service.
+	//Returns the identity (name) for the service. Ideally, this should be the domain name.
 	Ident() string
 
 	//Determines if a link is valid for the given service.
