@@ -15,8 +15,6 @@ import (
 	rutil "github.com/jgilman1337/rod_util/pkg"
 )
 
-//TODO: detect fullscreen modals that sometimes show up; will fail if one pops up
-
 func TestPerplexityBasic(t *testing.T) {
 	//Launch a new browser with default options, and connect to it
 	bopts := rutil.DefaultBrowserOptsDbg()
@@ -32,7 +30,8 @@ func TestPerplexityBasic(t *testing.T) {
 	//Add options; slog will be auto-attached as the default instance
 	ctx := context.Background()
 	opts := perplexity.DefaultDLOpts()
-	opts.Timeout = 20
+	opts.Timeout = 30
+	opts.DLWaitMax = 750
 	opts.Device = &devices.Nexus7
 	ctx = perplexity.WithOptions(ctx, &opts)
 

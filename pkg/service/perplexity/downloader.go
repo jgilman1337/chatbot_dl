@@ -7,6 +7,8 @@ import (
 
 	"github.com/go-rod/rod"
 
+	rutil "github.com/jgilman1337/rod_util/pkg"
+
 	c "github.com/jgilman1337/chatbot_dl/pkg/service/common"
 )
 
@@ -18,7 +20,7 @@ func dumpThread(b *rod.Browser, p *rod.Page, ctx context.Context, ttype c.Thread
 
 	//Target the download button for the thread
 	target := getSelector(ttype)
-	exportBtn, err := p.Element(target)
+	exportBtn, err := rutil.SafeSelect(p, target)
 	if err != nil || exportBtn == nil {
 		return nil, fmt.Errorf("failed to find download button; selector: '%s'", target)
 	}

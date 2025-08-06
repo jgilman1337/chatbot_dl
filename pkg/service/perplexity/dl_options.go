@@ -12,8 +12,9 @@ type DLOpts struct {
 
 	AbortOnArchiveFailure bool //Whether to completely exit if a format failed to be downloaded.
 
-	DLWaitMin uint //The minimum threshold for the page event runners (ms).
-	DLWaitMax uint //The minimum threshold for the page event runners (ms).
+	DLWaitMin           uint //The minimum threshold for the page event runners (ms).
+	DLWaitMax           uint //The minimum threshold for the page event runners (ms).
+	DrawerInterActDelay uint //The time (ms) to wait before interacting with the archival drawer.
 
 	TNLen int //The maximum length of a downloaded thread name.
 
@@ -28,8 +29,9 @@ func DefaultDLOpts() DLOpts {
 
 		AbortOnArchiveFailure: true,
 
-		DLWaitMin: 500,
-		DLWaitMax: 2500,
+		DLWaitMin:           500,
+		DLWaitMax:           2500,
+		DrawerInterActDelay: 250,
 
 		TNLen: 30,
 

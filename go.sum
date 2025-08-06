@@ -7,6 +7,8 @@ github.com/jgilman1337/rod_util v0.0.0-20250805022731-50a5e718fd24 h1:KePQiMHNFX
 github.com/jgilman1337/rod_util v0.0.0-20250805022731-50a5e718fd24/go.mod h1:/HRTjM5QmF422oTB5edfEfqsKOlfP/snxg1sxulKy+0=
 github.com/jgilman1337/rod_util v0.0.0-20250805025125-53f3f08c4e65 h1:kopihRuXjhOYwSOJa5YZU5CjeOp3cg/KwZx3b4AqaA4=
 github.com/jgilman1337/rod_util v0.0.0-20250805025125-53f3f08c4e65/go.mod h1:/HRTjM5QmF422oTB5edfEfqsKOlfP/snxg1sxulKy+0=
+github.com/jgilman1337/rod_util v0.0.0-20250806002409-98f70fdfa320 h1:33t4aKxgjtRL/E69LdCoai2PcYAmS2HT7VDFSVemXSc=
+github.com/jgilman1337/rod_util v0.0.0-20250806002409-98f70fdfa320/go.mod h1:/HRTjM5QmF422oTB5edfEfqsKOlfP/snxg1sxulKy+0=
 github.com/ysmood/fetchup v0.2.3 h1:ulX+SonA0Vma5zUFXtv52Kzip/xe7aj4vqT5AJwQ+ZQ=
 github.com/ysmood/fetchup v0.2.3/go.mod h1:xhibcRKziSvol0H1/pj33dnKrYyI2ebIvz5cOOkYGns=
 github.com/ysmood/goob v0.4.0 h1:HsxXhyLBeGzWXnqVKtmT9qM7EuVs/XOgkX7T6r1o1AQ=

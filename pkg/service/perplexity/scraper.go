@@ -111,16 +111,20 @@ func Scrape(b *rod.Browser, ctx context.Context, id string) (sres []c.Thread, se
 	for i, format := range formats {
 		lprefix := fmt.Sprintf("[dl %s; %d/%d]", format.NameFor(), i+1, len(formats))
 
+		//Close any modals that could interfere with the archival
+		dismissModal(p, ctx)
+
 		//Wait 1-3 seconds before opening the drawer
 		logger.Info(lprefix + " Waiting to open thread download drawer...")
-		time.Sleep(time.Millisecond * (time.Duration(opts.DLWaitMin) +
-			time.Duration(rand.N(opts.DLWaitMax))),
+		time.Sleep(time.Millisecond * time.Duration(
+			opts.DLWaitMin+
+				rand.N(opts.DLWaitMax)),
 		)
 
 		//Target the drawer button for the thread
 		logger.Info(lprefix + " Opening thread download drawer...")
 		drawerSelector := "[data-testid=\"thread-dropdown-menu\"]"
-		drawerBtn, err := p.Element(drawerSelector)
+		drawerBtn, err := rutil.SafeSelect(p, drawerSelector)
 		if err != nil || drawerBtn == nil {
 			if res := c.HandleErr(logger,
 				c.NewErrHandlerParams(
@@ -158,8 +162,9 @@ func Scrape(b *rod.Browser, ctx context.Context, id string) (sres []c.Thread, se
 			}
 		}
 		logger.Info(lprefix + " Thread download drawer clicked. Preparing to archive thread...")
-		time.Sleep(time.Millisecond * 250)
-
+		if opts.DrawerInterActDelay > 0 {
+			time.Sleep(time.Millisecond * time.Duration(opts.DrawerInterActDelay))
+		}
 		//Archive the thread
 		logger.Info(lprefix + " Archiving thread...")
 		bytes, err := dumpThread(b, p, ctx, format)
@@ -202,17 +207,26 @@ func getPageTitle(p *rod.Page, ctx context.Context) string {
 	opts := OptsFromCtx(ctx)
 	rawTitle := "perplexity_dl"
 
-	//Get the title of the thread
-	err := rod.Try(func() {
-		rawTitle = p.MustElement("h1.group\\/query").MustText()
-	})
+	errTxt := "Failed to get title; falling back to generic title \nCause: "
+
+	//Select the title element
+	elem, err := rutil.SafeSelect(p, "h1.group\\/query")
 	if err != nil {
-		logger.Warn(fmt.Sprintf(
-			"Failed to get title; falling back to generic title \nStacktrace: %s",
-			err.Error(),
-		))
+		logger.Warn(errTxt + err.Error())
 		return rawTitle //Errors are ignored
 	}
+	if elem == nil {
+		logger.Warn(errTxt + "<Nil title element>")
+		return rawTitle //Errors are ignored
+	}
+
+	//Get the title of the thread
+	t, err := elem.Text()
+	if err != nil {
+		logger.Warn(errTxt + err.Error())
+		return rawTitle //Errors are ignored
+	}
+	rawTitle = t
 
 	//Truncate to x chars
 	runes := []rune(rawTitle)
@@ -221,4 +235,26 @@ func getPageTitle(p *rod.Page, ctx context.Context) string {
 	}
 
 	return rawTitle
+}
+
+// Dismisses modals if any appear.
+func dismissModal(p *rod.Page, ctx context.Context) bool {
+	logger := c.LoggerFromCtx(ctx)
+
+	//Find the modal by selector
+	modalSelector := "[data-testid=\"close-modal\"]"
+	closeBtn, err := rutil.SafeSelect(p, modalSelector)
+	if err != nil || closeBtn == nil {
+		return false
+	}
+
+	//Click the close button on the modal
+	if err := closeBtn.Click(proto.InputMouseButtonLeft, 1); err != nil {
+		return false
+	}
+
+	logger.Debug(
+		fmt.Sprintf("Automatically found and dismissed a full-screen modal; selector: '%s'", modalSelector),
+	)
+	return true
 }
