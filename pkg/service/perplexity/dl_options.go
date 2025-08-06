@@ -14,7 +14,7 @@ type DLOpts struct {
 
 	DLWaitMin           uint //The minimum threshold for the page event runners (ms).
 	DLWaitMax           uint //The minimum threshold for the page event runners (ms).
-	DrawerInterActDelay uint //The time (ms) to wait before interacting with the archival drawer.
+	DrawerInteractDelay uint //The time (ms) to wait before interacting with the archival drawer.
 
 	TNLen int //The maximum length of a downloaded thread name.
 
@@ -31,7 +31,7 @@ func DefaultDLOpts() DLOpts {
 
 		DLWaitMin:           500,
 		DLWaitMax:           2500,
-		DrawerInterActDelay: 250,
+		DrawerInteractDelay: 250,
 
 		TNLen: 30,
 

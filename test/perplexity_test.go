@@ -32,7 +32,7 @@ func TestPerplexityBasic(t *testing.T) {
 	opts := perplexity.DefaultDLOpts()
 	opts.Timeout = 30
 	opts.DLWaitMax = 750
-	opts.Device = &devices.Nexus7
+	opts.Device = &devices.Nexus7 //This device causes fullscreen modals to appear
 	ctx = perplexity.WithOptions(ctx, &opts)
 
 	//Scrape the thread

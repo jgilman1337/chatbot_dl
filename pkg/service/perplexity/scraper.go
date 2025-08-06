@@ -162,8 +162,8 @@ func Scrape(b *rod.Browser, ctx context.Context, id string) (sres []c.Thread, se
 			}
 		}
 		logger.Info(lprefix + " Thread download drawer clicked. Preparing to archive thread...")
-		if opts.DrawerInterActDelay > 0 {
-			time.Sleep(time.Millisecond * time.Duration(opts.DrawerInterActDelay))
+		if opts.DrawerInteractDelay > 0 {
+			time.Sleep(time.Millisecond * time.Duration(opts.DrawerInteractDelay))
 		}
 		//Archive the thread
 		logger.Info(lprefix + " Archiving thread...")
