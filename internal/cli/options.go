@@ -16,19 +16,19 @@ type Options struct {
 
 	Threads uint `short:"T" long:"threads" description:"The number of goroutines to use to archive chatbot threads" default:"5" validate:"gte=1,lte=10"`
 
-	Positional Positional `positional-args:"true" required:"true"`
+	Positional Positional `positional-args:"true"`
 }
 
 // Holds positional arguments.
 type Positional struct {
-	URLs []string `positional-arg-name:"URLs" description:"The list of URLs to process"`
+	URLs []string `description:"The list of URLs to process" required:"true" validate:"required,urlslice"`
 }
 
 // Returns the default options for the `Options` struct.
 func DefaultOptions() *Options {
 	//Hack for defaults generation since creasty/defaults has a different array syntax to go-flags
 	opts := Options{}
-	if _, err := flags.ParseArgs(&opts, []string{}); err != nil {
+	if _, err := flags.ParseArgs(&opts, []string{""}); err != nil {
 		panic(err) //This shouldn't ever be hit
 	}
 	return &opts
