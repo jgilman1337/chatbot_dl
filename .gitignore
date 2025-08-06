@@ -3,3 +3,4 @@
 !test/data/**/*.txt
 *.bak
 doc
+bin/
