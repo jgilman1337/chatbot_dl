@@ -1,17 +1,35 @@
 package cli
 
+import (
+	"github.com/jessevdk/go-flags"
+)
+
 // Holds the options for the commandline interface.
 type Options struct {
-	TID     string //The ID of the thread to archive.
-	WorkDir string //The directory to output the files to.
-	Timeout uint   //The max time (in seconds) that the tool is allowed to take when scraping a thread.
+	Formats []string `short:"f" long:"formats" description:"The list of formats to archive" default:"md pdf"`
+	Timeout uint     `short:"t" long:"timeout" description:"The max time (in seconds) that the tool is allowed to take when scraping a thread" default:"20"`
+
+	Workdir string `short:"d" long:"workdir" description:"The directory to place archived threads and logs in" default:"."`
+	Flat    bool   `short:"F" long:"flat" description:"Whether to put all archived threads in the same folder or in sub-folders, numbered by their index"`
+
+	Verbose bool `short:"v" long:"verbose" description:"Show verbose logs"`
+
+	Threads uint `short:"T" long:"threads" description:"The number of goroutines to use to archive chatbot threads" default:"5" validate:"gte=1,lte=10"`
+
+	Positional Positional `positional-args:"true" required:"true"`
+}
+
+// Holds positional arguments.
+type Positional struct {
+	URLs []string `positional-arg-name:"URLs" description:"The list of URLs to process"`
 }
 
 // Returns the default options for the `Options` struct.
-func DefaultOptions() Options {
-	return Options{
-		TID:     "",
-		WorkDir: ".",
-		Timeout: 20,
+func DefaultOptions() *Options {
+	//Hack for defaults generation since creasty/defaults has a different array syntax to go-flags
+	opts := Options{}
+	if _, err := flags.ParseArgs(&opts, []string{}); err != nil {
+		panic(err) //This shouldn't ever be hit
 	}
+	return &opts
 }
