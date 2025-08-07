@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/url"
 	"strings"
 
 	"github.com/go-rod/rod"
@@ -13,6 +14,9 @@ import (
 type ServiceWD interface {
 	//Builds a link from a thread ID.
 	BuildLink(tid string) string
+
+	//Gets the thread ID (TID), given a URL pointing to a thread.
+	GetThreadID(u *url.URL) string
 
 	//Returns the identity (name) for the service. Ideally, this should be the domain name.
 	Ident() string

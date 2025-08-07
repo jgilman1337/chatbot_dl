@@ -1,6 +1,11 @@
 package perplexity
 
-import "github.com/jgilman1337/chatbot_dl/pkg/service"
+import (
+	"net/url"
+	"strings"
+
+	"github.com/jgilman1337/chatbot_dl/pkg/service"
+)
 
 // Enforces compliance with the IConfig interface.
 var _ service.ServiceWD = (*PplxScraper)(nil)
@@ -12,6 +17,12 @@ type PplxScraper struct {
 // Implements the BuildLink() function from ServiceWD.
 func (s PplxScraper) BuildLink(tid string) string {
 	return service.BuildLink(tid, s.Stem())
+}
+
+// Implements the GetThreadID() function from ServiceWD.
+func (s PplxScraper) GetThreadID(u *url.URL) string {
+	pieces := strings.Split(u.Path, "/")
+	return pieces[len(pieces)-1] //Last item in the pieces array
 }
 
 // Implements the Ident() function from ServiceWD.
