@@ -7,6 +7,11 @@ import (
 	"github.com/jgilman1337/chatbot_dl/pkg/service"
 )
 
+const (
+	//The identity string of this scraper.
+	Ident = "perplexity.ai"
+)
+
 // Enforces compliance with the IConfig interface.
 var _ service.ServiceWD = (*PplxScraper)(nil)
 
@@ -27,7 +32,7 @@ func (s PplxScraper) GetThreadID(u *url.URL) string {
 
 // Implements the Ident() function from ServiceWD.
 func (s PplxScraper) Ident() string {
-	return "perplexity.ai"
+	return Ident
 }
 
 // Implements the IsValidLink() function from ServiceWD.

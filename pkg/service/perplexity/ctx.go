@@ -27,7 +27,8 @@ func WithOptions(ctx context.Context, opts *DLOpts) context.Context {
 func OptsFromCtx(ctx context.Context) *DLOpts {
 	opts, ok := ctx.Value(optsKey{}).(*DLOpts)
 	if !ok || opts == nil {
-		*opts = DefaultDLOpts()
+		o := DefaultDLOpts()
+		return &o
 	}
 	return opts
 }
