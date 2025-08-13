@@ -3,8 +3,6 @@ package cli
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"path"
@@ -37,8 +35,6 @@ type WorkerParams struct {
 	//Browser *rod.Browser
 }
 
-//TODO: better logger with formatting; takes in logger func and format args `func logFmt(lfunc func(msg string, args ...any), msg string, args ...any)`
-
 // Runs an archival operation for a singular thread. This function also handles tasks like creation of the output directory.
 func RunWorker(wp WorkerParams, opts Options) error {
 	//Initialize slog and attach it to a new context
@@ -53,9 +49,7 @@ func RunWorker(wp WorkerParams, opts Options) error {
 	*/
 	ctx := context.Background()
 	ctx = c.WithLogger(ctx, logger)
-	logger.Info(
-		fmt.Sprintf("Using service '%s' with thread ID '%s'", wp.Srv.Ident(), wp.TID),
-	)
+	util.LogFmt(logger.Info, "Using service '%s' with thread ID '%s'", wp.Srv.Ident(), wp.TID)
 
 	//Create a writer buffer for slog for Rod
 	wh := util.NewSlogWriterHook(logger, slog.LevelDebug)
@@ -70,14 +64,15 @@ func RunWorker(wp WorkerParams, opts Options) error {
 	bopts.Logger = wh
 	browser, launcher, err := rutil.BuildSandboxless(bopts)
 	if err != nil {
-		log.Fatalf("Failed to launch Rod browser; reason: %s", err)
+		util.LogFmt(logger.Error, "Failed to launch Rod browser; reason: %s", err)
+		return err
 	}
 	defer rutil.RodFree(browser, launcher)
 
 	//Create a stealth page to bypass CF Turnstile
 	pg, err := c.CreateStealthPage(browser, nil, ctx)
 	if err != nil {
-		log.Fatalf("error while acquiring page: %s", err)
+		util.LogFmt(logger.Error, "error while acquiring page: %s", err)
 	}
 	defer pg.Close()
 
@@ -107,7 +102,7 @@ func RunWorker(wp WorkerParams, opts Options) error {
 			//t.Log("Caught a context deadline exceeded error")
 		}
 
-		return err
+		//return err
 	}
 
 	//Create the necessary working directories
@@ -118,8 +113,8 @@ func RunWorker(wp WorkerParams, opts Options) error {
 
 	//Add the logger buffer to the list of results
 	result = append(result, c.Thread{
-		Type:     c.Markdown,
-		Filename: "log",
+		Type:     c.Log,
+		Filename: util.Timestamp() + "-" + wp.TID,
 		Content:  buf.Bytes(),
 	})
 

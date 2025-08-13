@@ -7,6 +7,7 @@ const (
 	DOCX ThreadType = iota
 	Markdown
 	PDF
+	Log
 )
 
 // Emits the extension corresponding to this thread type.
@@ -19,6 +20,8 @@ func (t ThreadType) ExtFor() string {
 		ext = ".md"
 	case PDF:
 		ext = ".pdf"
+	case Log:
+		ext = ".log"
 	}
 	return ext
 }
@@ -33,6 +36,8 @@ func (t ThreadType) NameFor() string {
 		name = "Markdown"
 	case PDF:
 		name = "PDF"
+	case Log:
+		name = "Logfile"
 	}
 	return name
 }

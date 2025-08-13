@@ -12,13 +12,14 @@ import (
 	rutil "github.com/jgilman1337/rod_util/pkg"
 
 	c "github.com/jgilman1337/chatbot_dl/pkg/service/common"
+	"github.com/jgilman1337/chatbot_dl/pkg/util"
 )
 
 // Downloads a thread to a specified directory as either a Markdown or PDF file.
 func dumpThread(b *rod.Browser, p *rod.Page, ctx context.Context, ttype c.ThreadType) ([]byte, error) {
 	logger := c.LoggerFromCtx(ctx)
 
-	lprefix := fmt.Sprintf("[dumpThread %s]", ttype.NameFor())
+	lprefix := fmt.Sprintf("[dumpThread %s] ", ttype.NameFor())
 
 	//Target the download button for the thread
 	target := getSelector(ttype)
@@ -26,14 +27,14 @@ func dumpThread(b *rod.Browser, p *rod.Page, ctx context.Context, ttype c.Thread
 	if err != nil || exportBtn == nil {
 		return nil, fmt.Errorf("%w '%s'", ErrSelectorFailed, target)
 	}
-	logger.Debug(lprefix + " Found download button; clicking...")
+	logger.Debug(lprefix + "Found download button; clicking...")
 
 	//Download the file
 	var data []byte
 	dlerr := rod.Try(func() {
 		waitForDownload := waitDownload(b.Timeout(10 * time.Second))
 		exportBtn.MustClick()
-		logger.Debug(lprefix + " Clicked download button; waiting for completion...")
+		logger.Debug(lprefix + "Clicked download button; waiting for completion...")
 		data, err = waitForDownload()
 		if err != nil {
 			//Just log the error; Line 48 will handle the rest
@@ -48,7 +49,7 @@ func dumpThread(b *rod.Browser, p *rod.Page, ctx context.Context, ttype c.Thread
 	if len(data) == 0 {
 		return nil, ErrNoDownloadBytes
 	}
-	logger.Debug(fmt.Sprintf("%s Done; downloaded %d bytes", lprefix, len(data)))
+	util.LogFmt(logger.Debug, "%s Done; downloaded %d bytes", lprefix, len(data))
 
 	return data, nil
 }

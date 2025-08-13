@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -10,6 +11,13 @@ func If[T any](cond bool, vtrue T, vfalse T) T {
 		return vtrue
 	}
 	return vfalse
+}
+
+// A wrapper for slog that allows for string formatting (via sprintf) without using the named parameters feature of slog.
+func LogFmt(lfunc func(msg string, args ...any), msg string, args ...any) {
+	lfunc(
+		fmt.Sprintf(msg, args...),
+	)
 }
 
 // Returns a timestamp according to the format: `yyyyMMdd_HHmmss`, eg: `20250723_133723`.

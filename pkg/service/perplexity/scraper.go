@@ -75,7 +75,7 @@ func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, ti
 		if err != nil || drawerBtn == nil {
 			c.LogErr(err, c.NewErrHandlerParams(
 				fmt.Sprintf("%s Failed to find drawer button (skipped); selector: '%s'", lprefix, drawerSelector),
-				lprefix+" find drawer button",
+				"find drawer button",
 				logger,
 			))
 
@@ -90,7 +90,7 @@ func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, ti
 		if err := drawerBtn.Click(proto.InputMouseButtonLeft, 1); err != nil {
 			c.LogErr(err, c.NewErrHandlerParams(
 				fmt.Sprintf("%s Failed to click drawer button (skipped); selector: '%s'", lprefix, drawerSelector),
-				lprefix+" click drawer button",
+				"click drawer button",
 				logger,
 			))
 
@@ -110,7 +110,7 @@ func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, ti
 		if err != nil {
 			c.LogErr(err, c.NewErrHandlerParams(
 				"Failed to archive thread",
-				lprefix+" archive thread",
+				"archive thread",
 				logger,
 			))
 
@@ -128,7 +128,6 @@ func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, ti
 			Content:  bytes,
 		}
 		result = append(result, archive)
-		fmt.Printf("Filename is '%s'\n", archive.Filename)
 
 		logger.Info(lprefix + " Successfully archived thread")
 	}
@@ -188,8 +187,6 @@ func dismissModal(p *rod.Page, ctx context.Context) bool {
 		return false
 	}
 
-	logger.Debug(
-		fmt.Sprintf("Automatically found and dismissed a full-screen modal; selector: '%s'", modalSelector),
-	)
+	util.LogFmt(logger.Debug, "Automatically found and dismissed a full-screen modal; selector: '%s'", modalSelector)
 	return true
 }
