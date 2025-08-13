@@ -1,0 +1,2 @@
+# Run in the project root
+clear && make cli && ./bin/cli -D $(tr '\n' ' ' < thread_samples/threads_pplx.txt)
