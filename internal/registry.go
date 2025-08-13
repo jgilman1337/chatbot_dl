@@ -28,7 +28,7 @@ func init() {
 }
 
 // Picks an appropriate service to handle the URL from the registry based on the URL stem.
-func PickService(u string) (*service.ServiceWD, string, error) {
+func PickService(u string) (service.ServiceWD, string, error) {
 	//Parse the incoming URL
 	urll, err := url.Parse(u)
 	if err != nil {
@@ -55,7 +55,7 @@ func PickService(u string) (*service.ServiceWD, string, error) {
 		)
 	}
 
-	return &service, service.GetThreadID(urll), nil
+	return service, service.GetThreadID(urll), nil
 }
 
 // Gets the top-level domain name and TLD from a hostname. Only works for basic TLDs and not compound ones like `.co.uk`, `.gov.uk`, etc.

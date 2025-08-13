@@ -7,69 +7,47 @@ import (
 	"log/slog"
 )
 
-// Return object for the error handler.
-type ErrHandlerResult int8
-
-const (
-	EH_OK ErrHandlerResult = iota
-	EH_TIMEOUT_EXCEEDED
-	EH_OTHER_ERR
+var (
+	CtxExceededErr = errors.New("the request took too long to complete, and has been halted prematurely")
 )
 
 // Struct wrapper for error handler parameters.
 type ErrorHandlerParams struct {
-	Msg  string
-	Step string
-	Err  error
-
-	FiredCtxErr *bool
-	OutErr      *error
+	Msg    string
+	Step   string
+	logger *slog.Logger
 }
 
 // Builds a new error handler with parameters.
-func NewErrHandlerParams(m string, step string, err error, firedCtxErr *bool, outErr *error) ErrorHandlerParams {
+func NewErrHandlerParams(m string, step string, l *slog.Logger) ErrorHandlerParams {
 	return ErrorHandlerParams{
-		Msg:         m,
-		Step:        step,
-		Err:         err,
-		FiredCtxErr: firedCtxErr,
-		OutErr:      outErr,
+		Msg:    m,
+		Step:   step,
+		logger: l,
 	}
 }
 
 // Handler to catch and process errors, including timeout exceeded errors.
-func HandleErr(l *slog.Logger, p ErrorHandlerParams) ErrHandlerResult {
+func LogErr(err error, p ErrorHandlerParams) error {
 	//Ignore non-errors
-	if p.Err == nil {
-		return EH_OK
+	if err == nil {
+		return err
 	}
 
-	//Handle the error correctly
-	if errors.Is(p.Err, context.DeadlineExceeded) {
-		//Workaround for capitalized error warning
-		efmt := fmt.Sprintf(
-			"Time's up! The request took too long to complete, and has been halted prematurely (step: %s); reason:",
-			p.Step,
+	//Format the error
+	var efmt string
+	if errors.Is(err, context.DeadlineExceeded) {
+		efmt = fmt.Sprintf(
+			"%s (step: %s)",
+			CtxExceededErr, p.Step,
 		)
-
-		//Emit the error
-		terr := fmt.Errorf("%s %w", efmt, p.Err)
-		if !(*p.FiredCtxErr) {
-			//Don't log this error twice and don't overwrite the original result
-			l.Error(terr.Error())
-			*p.OutErr = terr
-		}
-
-		*p.FiredCtxErr = true
-		return EH_TIMEOUT_EXCEEDED
-
 	} else {
-		LogErr(l, p.Msg, p.Err)
-		return EH_OTHER_ERR
+		efmt = fmt.Sprintf(
+			"%s (step: %s)",
+			err.Error(), p.Step,
+		)
 	}
-}
 
-// Small utility to log errors to slog while preserving structure.
-func LogErr(l *slog.Logger, m string, err error) {
-	l.Error(m, slog.Any("error", err))
+	p.logger.Error(p.Msg + ": " + efmt)
+	return err
 }

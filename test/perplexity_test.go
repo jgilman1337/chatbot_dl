@@ -10,9 +10,10 @@ import (
 	"path"
 	"runtime"
 	"testing"
+	"time"
 
 	"github.com/go-rod/rod/lib/devices"
-	"github.com/jgilman1337/chatbot_dl/pkg/service/common"
+	c "github.com/jgilman1337/chatbot_dl/pkg/service/common"
 	"github.com/jgilman1337/chatbot_dl/pkg/service/perplexity"
 	"github.com/jgilman1337/chatbot_dl/pkg/util"
 	rutil "github.com/jgilman1337/rod_util/pkg"
@@ -31,7 +32,7 @@ func TestPerplexityBasic(t *testing.T) {
 	id := "ai-amplifies-false-memories-9iZN5JuFT5.9asR1Ntf._A"
 
 	//Create a basic slog handler
-	handler := util.NewSimpleHandler(os.Stdout, &slog.HandlerOptions{
+	handler := util.NewWorkerHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	})
 
@@ -40,15 +41,25 @@ func TestPerplexityBasic(t *testing.T) {
 	//Add options
 	ctx := context.Background()
 	opts := perplexity.DefaultDLOpts()
-	opts.Timeout = 30
 	opts.DLWaitMax = 750
-	opts.Device = &devices.Nexus7 //This device causes fullscreen modals to appear
-	ctx = common.WithLogger(ctx, logger)
+	ctx = c.WithLogger(ctx, logger)
 	ctx = perplexity.WithOptions(ctx, &opts)
+
+	//Create the page
+	pg, err := c.CreateStealthPage(
+		browser, &devices.Nexus7, ctx,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//Temporary page wrapper with timeout for this job only
+	p := pg.Timeout(20 * time.Second)
+	defer p.CancelTimeout()
 
 	//Scrape the thread
 	pplx := perplexity.PplxScraper{}
-	result, err := pplx.Scrape(browser, nil, ctx, id)
+	result, err := pplx.Scrape(browser, p, ctx, id)
 	if err != nil {
 		if result != nil {
 			t.Log("Result is non-nil")

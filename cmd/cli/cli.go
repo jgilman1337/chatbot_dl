@@ -8,14 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-rod/rod"
 	"github.com/jessevdk/go-flags"
-	rutil "github.com/jgilman1337/rod_util/pkg"
 	"github.com/marusama/semaphore/v2"
 
 	pkg "github.com/jgilman1337/chatbot_dl/internal"
 	"github.com/jgilman1337/chatbot_dl/internal/cli"
-	"github.com/jgilman1337/chatbot_dl/pkg/util"
 )
 
 func main() {
@@ -33,59 +30,18 @@ func main() {
 		os.Exit(0) //Possibly due to help text being shown
 	}
 
-	//Spawn a new web browser
-	bopts := util.If(opts.Debug, rutil.DefaultBrowserOptsDbg(), rutil.DefaultBrowserOpts())
-	bopts.Leakless = true
-	browser, launcher, err := rutil.BuildSandboxless(bopts)
-	if err != nil {
-		log.Fatalf("Failed to launch Rod browser; reason: %s", err)
-	}
-	defer rutil.RodFree(browser, launcher)
-
 	/*
-		Create a page pool and semaphore, each with the size equal to that of the threads option
+		Create a semaphore, each with the size equal to that of the threads option
 		The semaphore guarantees that only n number of threads are archived at once
 		It also allows for the queuing up of overflow threads to archive once those before it finish
 	*/
-	pool := rod.NewPagePool(opts.Threads)
-	defer pool.Cleanup(func(p *rod.Page) { p.MustClose() })
 	sem := semaphore.New(opts.Threads)
 
-	//TODO: temp stuff begin
-
-	// Create a page if needed
-	/*
-		create := func() (*rod.Page, error) {
-			// We use MustIncognito to isolate pages with each other
-			return browser.MustPage(), nil
-		}
-	*/
-
-	/*
-		yourJob := func(id int, pp *rod.Pool[rod.Page]) {
-			fmt.Printf("[%d] Spawned new thread\n", id)
-
-			page, err := pp.Get(create)
-			if err != nil {
-				log.Fatalf("error while acquiring page: %s", err)
-			}
-			defer pp.Put(page)
-
-			page.MustNavigate("http://example.com")
-			page.MustWaitDOMStable()
-			fmt.Printf("[%d] %s\n", id, page.MustInfo().Title)
-		}
-	*/
-
-	//TODO: temp stuff end
-
-	//Setup a waitgroup and semaphore
-	wg := sync.WaitGroup{}
-
 	//Archive each thread given in the positional arguments
+	wg := sync.WaitGroup{}
 	for i, url := range opts.Positional.URLs {
-		//Skip URLs that do not correspond to a valis service
-		_, tid, err := pkg.PickService(url)
+		//Skip URLs that do not correspond to a valid service
+		service, tid, err := pkg.PickService(url)
 		if err != nil {
 			log.Printf("Skipped URL at position %d; reason: %s\n", i+1, err)
 			continue
@@ -105,17 +61,26 @@ func main() {
 			if err := sem.Acquire(context.Background(), 1); err != nil {
 				log.Fatalf("Failed to acquire semaphore: %v", err)
 			}
-			defer sem.Release(1) //Very important to prevent starvation
+			defer func() {
+				sem.Release(1) //Very important to prevent starvation
+				fmt.Println("worker", i+1, "has released the semaphore")
+			}()
 
 			//Run the worker
-			//yourJob(i+1, &pool)
-			if err := cli.RunPoolWorker(i+1, tid, &pool, *opts); err != nil {
+			wp := cli.WorkerParams{
+				ID:  i + 1,
+				TID: tid,
+				Srv: service,
+			}
+			if err := cli.RunWorker(wp, *opts); err != nil {
 				log.Printf("An error occurred while archiving URL at position %d; %s\n", i+1, err)
 			}
+
+			fmt.Println("worker", i+1, "has finished")
 		}()
 
 		//Wait a bit to prevent Rod from being overloaded; infinitely loads the page otherwise
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(125 * time.Millisecond)
 	}
 
 	//Wait for the goroutines to all complete before continuing

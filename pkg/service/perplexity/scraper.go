@@ -16,81 +16,40 @@ import (
 )
 
 // Implements the Scrape() function from ServiceWD.
-func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, tid string) (sres []c.Thread, serr error) {
+func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, tid string) ([]c.Thread, error) {
 	logger := c.LoggerFromCtx(ctx)
 	opts := OptsFromCtx(ctx)
 	result := make([]c.Thread, 0)
 
-	//Create a page if it doesn't yet exist
-	createdPage := p == nil
-	if createdPage {
-		logger.Debug("Attempting to self-spawn a new page...")
-
-		np, err := c.CreateStealthPage(b, opts.Device, opts.Timeout, ctx)
-		if err != nil {
-			return nil, err
-		}
-		p = np
-
-		logger.Debug("Spawned a new stealth page successfully")
+	//Reject if a page or browser doesn't exist
+	if b == nil {
+		return nil, ErrNilBrowser
 	}
-
-	//Defer the page close operation for later, but only if the function created the page
-	caughtTimeoutErr := false
-	defer func() {
-		if !createdPage {
-			return
-		}
-
-		logger.Debug("Attempting to kill the self-spawned page...")
-
-		err := p.Close()
-		if res := c.HandleErr(logger,
-			c.NewErrHandlerParams(
-				"Error while closing page",
-				"page close",
-				err,
-				&caughtTimeoutErr,
-				&serr,
-			),
-		); res != c.EH_OK {
-			return
-		}
-
-		logger.Debug("Successfully killed the self-spawned page")
-	}()
+	if p == nil {
+		return nil, ErrNilPage
+	}
 
 	//TODO: setup network monitoring stuff from old tests
 
 	//Navigate to the target thread
 	if err := p.Navigate(s.BuildLink(tid)); err != nil {
-		if res := c.HandleErr(logger,
-			c.NewErrHandlerParams(
-				"Error while navigating to the target",
-				"navigate to target",
-				err,
-				&caughtTimeoutErr,
-				&serr,
-			),
-		); res != c.EH_OK {
-			return
-		}
+		c.LogErr(err, c.NewErrHandlerParams(
+			"Error while navigating to the target",
+			"navigate to target",
+			logger,
+		))
+		return nil, err
 	}
 	logger.Info("Successfully loaded the webpage; waiting for the DOM to stabilize")
 
 	//Wait for the page to load before continuing
 	if err := p.WaitDOMStable(time.Second, 0); err != nil {
-		if res := c.HandleErr(logger,
-			c.NewErrHandlerParams(
-				"Error while waiting on the DOM",
-				"wait on DOM",
-				err,
-				&caughtTimeoutErr,
-				&serr,
-			),
-		); res != c.EH_OK {
-			return
-		}
+		c.LogErr(err, c.NewErrHandlerParams(
+			"Error while waiting on the DOM",
+			"wait on DOM",
+			logger,
+		))
+		return nil, err
 	}
 	logger.Info("Successfully waited on the DOM; beginning archival process")
 
@@ -114,39 +73,31 @@ func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, ti
 		drawerSelector := "[data-testid=\"thread-dropdown-menu\"]"
 		drawerBtn, err := rutil.SafeSelect(p, drawerSelector)
 		if err != nil || drawerBtn == nil {
-			if res := c.HandleErr(logger,
-				c.NewErrHandlerParams(
-					fmt.Sprintf("%s Failed to find drawer button (skipped); selector: '%s'", lprefix, drawerSelector),
-					lprefix+" find drawer button",
-					err,
-					&caughtTimeoutErr,
-					&serr,
-				),
-			); res != c.EH_OK {
-				if opts.AbortOnArchiveFailure {
-					return
-				} else {
-					continue
-				}
+			c.LogErr(err, c.NewErrHandlerParams(
+				fmt.Sprintf("%s Failed to find drawer button (skipped); selector: '%s'", lprefix, drawerSelector),
+				lprefix+" find drawer button",
+				logger,
+			))
+
+			if opts.AbortOnArchiveFailure {
+				return nil, err
+			} else {
+				continue
 			}
 		}
 
 		//Click the thread download drawer
 		if err := drawerBtn.Click(proto.InputMouseButtonLeft, 1); err != nil {
-			if res := c.HandleErr(logger,
-				c.NewErrHandlerParams(
-					fmt.Sprintf("%s Failed to click drawer button (skipped); selector: '%s'", lprefix, drawerSelector),
-					lprefix+" click drawer button",
-					err,
-					&caughtTimeoutErr,
-					&serr,
-				),
-			); res != c.EH_OK {
-				if opts.AbortOnArchiveFailure {
-					return
-				} else {
-					continue
-				}
+			c.LogErr(err, c.NewErrHandlerParams(
+				fmt.Sprintf("%s Failed to click drawer button (skipped); selector: '%s'", lprefix, drawerSelector),
+				lprefix+" click drawer button",
+				logger,
+			))
+
+			if opts.AbortOnArchiveFailure {
+				return nil, err
+			} else {
+				continue
 			}
 		}
 		logger.Info(lprefix + " Thread download drawer clicked. Preparing to archive thread...")
@@ -157,20 +108,16 @@ func (s PplxScraper) Scrape(b *rod.Browser, p *rod.Page, ctx context.Context, ti
 		logger.Info(lprefix + " Archiving thread...")
 		bytes, err := dumpThread(b, p, ctx, format)
 		if err != nil {
-			if res := c.HandleErr(logger,
-				c.NewErrHandlerParams(
-					"Failed to archive thread",
-					lprefix+" archive thread",
-					err,
-					&caughtTimeoutErr,
-					&serr,
-				),
-			); res != c.EH_OK {
-				if opts.AbortOnArchiveFailure {
-					return
-				} else {
-					continue
-				}
+			c.LogErr(err, c.NewErrHandlerParams(
+				"Failed to archive thread",
+				lprefix+" archive thread",
+				logger,
+			))
+
+			if opts.AbortOnArchiveFailure {
+				return nil, err
+			} else {
+				continue
 			}
 		}
 
